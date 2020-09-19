@@ -1,8 +1,9 @@
 package com.duanmau.prjmap;
 
-import com.duanmau.prjmap.retrofit.InterfaceInsert;
-import com.duanmau.prjmap.retrofit.Product;
-import com.duanmau.prjmap.retrofit.ServerResponse;
+
+import com.duanmau.prjmap.retrofit.InterfaceRequestGetData;
+import com.duanmau.prjmap.retrofit.Products;
+import com.duanmau.prjmap.retrofit.ResponseServer;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnCameraIdleListener;
@@ -90,7 +91,7 @@ public class EventsDemoActivity extends AppCompatActivity
                 theStreet="";
                 theStreet = addresses.get(0).getThoroughfare();
                 Toast.makeText(getApplicationContext(),city+"; "+address+"; "+address11+"; Pho: "+theStreet,Toast.LENGTH_SHORT).show();
-                insertData();//call retrofit
+                loadAll();//call retrofit
             }
         }
         catch (IOException e) {
@@ -108,36 +109,35 @@ public class EventsDemoActivity extends AppCompatActivity
     }
 
     //////retrofit
-    public void insertData()
+    String str="";
+    List<Products> data;
+    public void loadAll()
     {
+        //tao doi tuong retrofit
         Retrofit retrofit = new Retrofit.Builder()
+                //.baseUrl("https://batdongsanabc.000webhostapp.com/mob403lab4/")
                 .baseUrl("https://batdongsanabc.000webhostapp.com/mob403lab5/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-
-        InterfaceInsert interfaceInsert = retrofit.create(InterfaceInsert.class);
-        //chuan bi du lieu
-        Product p = new Product();
-        p.setName("Name1");
-        p.setPrice("123");
-        p.setDescription("mota");
-        //ServerResuest serverResuest = new ServerResuest();
-        //serverResuest.setProducts(p);
-        Call<ServerResponse> call =
-                interfaceInsert.thucThiInsert(p.getName(),p.getPrice(),
-                        p.getDescription());
-        call.enqueue(new Callback<ServerResponse>() {
+        //lay request
+        InterfaceRequestGetData interface1 = retrofit.create(InterfaceRequestGetData.class);
+        Call<ResponseServer> call = interface1.GetJSON("52");
+        //thuc thi
+        call.enqueue(new Callback<ResponseServer>() {
             @Override
-            public void onResponse(Call<ServerResponse> call,
-                                   Response<ServerResponse> response) {
-                ServerResponse serverResponse = response.body();
-                String msg = serverResponse.getMessage();
-                Toast.makeText(getApplicationContext(),"Retrofit: "+msg,Toast.LENGTH_SHORT).show();
-                //txtKetQuaInsert.setText(msg);
+            public void onResponse(Call<ResponseServer> call, Response<ResponseServer> response) {
+                ResponseServer responseServer = response.body();
+                data = new ArrayList<>(Arrays.asList(responseServer.getProducts()));
+                for(Products p: data)
+                {
+                    str +="Name: "+p.getName()+"\n\n";
+                }
+                //textView.setText(str);
+                Toast.makeText(getApplicationContext(),"Retrofit: "+str,Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onFailure(Call<ServerResponse> call, Throwable t) {
+            public void onFailure(Call<ResponseServer> call, Throwable t) {
 
             }
         });
